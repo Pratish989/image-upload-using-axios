@@ -1,0 +1,50 @@
+- Choose file button  ✅
+- selection modal/popup opens ✅
+- if i select extension other than images, then it should give me error of file format is not accepted  and then the choose file option will be cleared ✅
+- if i select image extension file image and if it is bigger then 5mb then  it should show error of large file and it shouldnt show the preview ✅
+
+issue in above section? 
+-> when i upload any image with more than 5mb image then it shows error but when i upload any image with less than 5mb after that errors
+then it doesnt show the preview of that image and that error stays there only
+
+solved by -> setting state to false when the image is in perfect form ✅
+
+
+- Upload button scenario ✅
+- at first the upload button should be disabled ✅
+- if both the condition above are fulfilled then the button should be enabled ✅
+
+
+
+- API endpoint scenario 
+-  using axios
+- if all the conditions are met then it should give message of image uploaded sucessfully
+- if conditions are not met then handle errors for the same 
+
+
+
+- Multiple image file upload scenario
+- select Multiple files but not more than 5 files and it should have both validation of file extension and file size 
+- if selected images are not less then 5 mb then it should show the error -> "image_name is bigger than 5mb" 
+- if selected file is not in image format then it should show error -> "file_name is not an image" 
+- give a panel with images selected with cancel/cross button above all the selected images so that user can remove the selected file and add more 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
