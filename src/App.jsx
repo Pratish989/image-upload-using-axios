@@ -1,119 +1,115 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import "./App.css";
-import UploadImage from "./UploadImage";
 import axios from "axios";
 
 const baseUrl = "http://192.168.1.209:3000/api/v1/uploadSingleImage";
 
 function App() {
-  const [file, setFile] = useState("");
-  const [fileError, setFileError] = useState("");
-  const [previewError, setPreviewError] = useState(false);
-  const [previewMessage, setPreviewMessage] = useState("");
-  const [uploadBtn, setUploadBtn] = useState(true);
+  const [files, setFiles] = useState([]);
+  const [fileErrors, setFileErrors] = useState([]);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // function onUpload() {
-  //   axios
-  //     .post(baseUrl, {
-  //       title: "Image Uploaded Succesfully!",
-  //       body: "This is a new Image."
-  //     })
-  //     .then((response) => {
-  //       setSuccessMessage(response.data);
-  //     });
-  // }
-
-
-  const onUploadImage = async (e)=>{
+  const onUploadImages = async (e) => {
     e.preventDefault();
-    try{
-      const response = await axios.post(baseUrl,{ message : "Image successfully uploaded"})
-      console.log(response.data)
-    }catch (err){
-      console.log(err.response)
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    try {
+      const response = await axios.post(baseUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setSuccessMessage("Images successfully uploaded");
+      console.log(response.data);
+    } catch (err) {
+      console.log(err.response);
     }
-  }
+  };
 
-  function chooseImage(e) {
-    console.log(e.target.files[0]);
-    setFile(URL.createObjectURL(e.target.files[0]));
-    setPreviewMessage(`${e.target.files[0].name}`);
+  const chooseImages = (e) => {
+    const selectedFiles = e.target.files;
+    const newFiles = [];
+    const newErrors = [];
 
-    if (e.target.files[0].size > maxAllowedSize) {
-      setFileError(
-        <p style={{ color: "red" }}>
-          File is too big! Max size allowed upto 5mb{" "}
-        </p>
-      );
-      setPreviewError(true);
-      setFile("");
+    if (selectedFiles.length > 5) {
+      newErrors.push("You can't choose more than 5 images");
     } else {
-      setPreviewError(false);
-      setFileError(false);
+      for (let i = 0; i < Math.min(5, selectedFiles.length); i++) {
+        const file = selectedFiles[i];
+
+        if (file.size > maxAllowedSize) {
+          newErrors.push(`${file.name} is too big! Max size allowed up to 5mb`);
+        } else if (
+          !(
+            file.type === "image/jpg" ||
+            file.type === "image/jpeg" ||
+            file.type === "image/png"
+          )
+        ) {
+          newErrors.push(`${file.name} is not an image. Unsupported extension`);
+        } else {
+          newFiles.push(file);
+        }
+      }
     }
 
+    setFiles(newFiles);
+    setFileErrors(newErrors);
+  };
 
-    if (
-      e.target.files[0].type === "image/jpg" ||
-      e.target.files[0].type === "image/jpeg" ||
-      e.target.files[0].type === "image/png"
-    ) {
-      console.log("confirm");
-      setUploadBtn(false);
-    } else {
-      console.log("not supported");
-      setFileError(
-        <p style={{ color: "red" }}>
-          File you uploaded is not an Image. Unsupported Extension
-        </p>
-      );
-      setFile("");
-      console.log("not supported file format");
-    }
+  const removeImage = (index) => {
+    const newFiles = [...files];
+    newFiles.splice(index, 1);
 
-    if (
-      (e.target.files[0].type === "image/jpg" ||
-        e.target.files[0].type === "image/jpeg" ||
-        e.target.files[0].type === "image/png") &&
-      e.target.files[0].size > maxAllowedSize
-    ) {
-      setUploadBtn(true);
-    }
-  }
+    setFiles(newFiles);
+  };
 
   const maxAllowedSize = 5 * 1024 * 1024;
-  console.log(maxAllowedSize);
 
   return (
     <>
-      <UploadImage />
       <div className="upload-section">
         <input
           type="file"
-          name="image"
-          id="image"
+          name="images"
+          id="images"
           accept="image/*"
-          onChange={chooseImage}
-          style={{ position: "absolute" }}
-        />{" "}
+          multiple
+          onChange={chooseImages}
+        />
         <br />
-        <p>{fileError}</p>
-        {previewError && fileError ? null : (
-          <img style={{ height: "500px", width: "500px" }} src={file} />
-        )}
-        <button
-          disabled={uploadBtn ? true : false}
-          onClick={onUploadImage}
-        >
+        {fileErrors.map((error, index) => (
+          <p key={index} style={{ color: "red" }}>
+            {error}
+          </p>
+        ))}
+        <div className="image-panel">
+          {files.map((file, index) => (
+            <div key={index} className="selected-image">
+              <img
+                src={URL.createObjectURL(file)}
+                alt={file.name}
+                style={{ height: "100px", width: "100px" }}
+              />
+              <button
+                className="remove-button"
+                onClick={() => removeImage(index)}
+              >
+                X
+              </button>
+            </div>
+          ))}
+        </div>
+        <button disabled={files.length === 0} onClick={onUploadImages}>
           Upload
         </button>
         <p>{successMessage}</p>
       </div>
-      {/* 
-    <h1>{post.title}</h1>
-      <p>{post.body}</p> */}
     </>
   );
 }
