@@ -1,14 +1,17 @@
 import { useState } from "react";
 import "./App.css";
 import axios from "axios";
+import UploadImage from "./UploadImage";
 
 const baseUrl = "http://192.168.1.209:3000/api/v1/uploadMultiImage";
 
 function App() {
   const [files, setFiles] = useState([]);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [fileErrors, setFileErrors] = useState([])
-  const [fileErrorMessage, setFileErrorMessage] = useState("");
+  const [fileErrors, setFileErrors] = useState([]);
+  // const [ errorState, setErrorState] = useState(false)
+  const [disabled, setDisabled] = useState(false);
+  console.log(disabled);
 
   const onUploadImages = async (e) => {
     e.preventDefault();
@@ -32,60 +35,55 @@ function App() {
     }
   };
 
-  // const chooseImages = (e) => {
-  //   const selectedFiles = e.target.files;
-  //   const newFiles = [];
-
-  //   if (selectedFiles.length > 5) {
-  //     setFileErrorMessage("You can't choose more than 5 images");
-  //     setSuccessMessage("");
-  //   } else {
-  //     for (let i = 0; i < Math.min(5, selectedFiles.length); i++) {
-  //       const file = selectedFiles[i];
-  //       console.log(file);
-  //       if (file.size > maxAllowedSize) {
-  //         setFileErrorMessage(`${file.name} is too big! Max size allowed up to 5mb`)
-  //       } else if (file.type !== "image/*") {
-  //         setFileErrorMessage(`${file.name} is not an image. Unsupported extension`)
-  //       } else if(file.type === "image/*"){
-  //         newFiles.push(file)
-  //       }
-  //     }
-  //   }
-  // };
-
-
   const chooseImages = (e) => {
+    // console.log(files)
+    // console.log(disabled)
+    if (disabled) {
+      setDisabled(!disabled);
+    }
     const selectedFiles = e.target.files;
+    console.log(selectedFiles);
     const newFiles = [];
-    const newErrors = []
+    const newErrors = [];
 
     if (selectedFiles.length > 5) {
-      setFileErrorMessage("You can't choose more than 5 images")
-
+      newErrors.push(`You can't choose more than 5 images`);
+      setDisabled(true);
     } else {
       for (let i = 0; i < Math.min(5, selectedFiles.length); i++) {
         const file = selectedFiles[i];
-        console.log(file)
+        console.log(file);
 
         if (file.size > maxAllowedSize) {
-          setFileErrorMessage(`${file.name} is too big! Max size allowed up to 5mb`)
+          setDisabled(true);
+          newErrors.push(
+            `${file.name} is too big! Max size allowed up to 5mb `
+          );
         } else if (
-          !file.name.match(/\.(jpg|jpeg|png|gif|heic|avif|JPG|JPEG)$/)
+          !file.name.match(
+            /\.(jpg|jpeg|png|gif|heic|avif|PNG|JPG|JPEG|svg|SVG|APNG|HEIC|bmp)$/
+          )
         ) {
-          newErrors.push(`\n  ${file.name} is not an image. Unsupported extension! `)
-          // setFileErrorMessage(`${file.name} is not an image. Unsupported extension`)
-        } else  {
+          newErrors.push(
+            `\n  ${file.name} is not an image. Unsupported extension!`
+          );
+          setDisabled(true);
+        } else {
           newFiles.push(file);
+          // setDisabled(false)
         }
-      } 
+      }
     }
-
     setFiles(newFiles);
-    setFileErrors(newErrors)
-
+    setFileErrors(
+      newErrors.map((error) => (
+        <p key={error}>
+          {error}
+          <br />
+        </p>
+      ))
+    );
   };
-
 
   const removeImage = (index) => {
     console.log(`Image at ${index} removed`);
@@ -99,43 +97,53 @@ function App() {
 
   return (
     <>
-      <h3>Multiple image </h3>
-      <h4 style={{color:"red"}}>{fileErrors}</h4>
-      <p style={{ color: "greenyellow" }}>{successMessage}</p>
-      <h4 style={{ color: "red" }}>{fileErrorMessage}</h4>
+      <UploadImage />
+      <div className="error-div">
+        <p style={{ color: "red", fontSize: "15px" }}>{fileErrors}</p>
+        <p style={{ color: "greenyellow" }}>{successMessage}</p>
+      </div>
       <form>
         <div className="upload-section">
-          <input
-            type="file"
-            name="file"
-            id="images"
-            accept="*"
-            multiple
-            onChange={chooseImages}
-          />
-          <br />
-          <div className="image-panel">
-            {files.map((file, index) => (
-              <div key={index}>
-                <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  style={{ height: "100px", width: "100px" }}
-                />
-                <button
-                  type="button"
-                  key={index}
-                  onClick={() => removeImage(index)}
-                >
-                  X
-                </button>
-              </div>
-            ))}
+          <div className="choose-file-section">
+            <input
+              type="file"
+              name="file"
+              id="images"
+              accept="*"
+              multiple
+              onChange={chooseImages}
+            />
           </div>
+          <br />
+          <div className="image-show">
+            <div className="image-panel">
+              {files.map((file, index) => (
+                <div key={index}>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    style={{ height: "100px", width: "100px" }}
+                  />
+                  <button
+                    className="remove-button"
+                    type="button"
+                    key={index}
+                    onClick={() => removeImage(index)}
+                  >
+                    X
+                  </button>
+                  <p>{file.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="upload-button-div">
           <button
-            disabled={files.length === 0}
+            disabled={files.length === 0 || disabled}
             onClick={onUploadImages}
             className="upload-button"
+            type="button"
           >
             Upload
           </button>
@@ -146,4 +154,3 @@ function App() {
 }
 
 export default App;
-
